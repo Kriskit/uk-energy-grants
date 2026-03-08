@@ -3,293 +3,545 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UK Energy Grants Checker - Find Your Eligibility</title>
-    <meta name="description" content="Check which UK energy grants you're eligible for and save money on home improvements">
+    <title>UK Energy Grants Checker</title>
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         .hero-gradient {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #4facfe 75%, #00f2fe 100%);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
         }
-        .grant-card {
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        .card-hover {
             transition: transform 0.2s, box-shadow 0.2s;
         }
-        .grant-card:hover {
+        .card-hover:hover {
             transform: translateY(-4px);
-            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
         }
     </style>
 </head>
-<body class="bg-gray-50">
+<body>
     <div id="root"></div>
-
+    
     <script type="text/babel">
-        const { useState } = React;
+        const { useState, useEffect } = React;
+
+        const grantsData = {
+  "grants": [
+    {
+      "id": "gbis",
+      "name": "Great British Insulation Scheme",
+      "status": "Applications closed (installations continue until March 2026)",
+      "description": "Helps people get free or cheaper insulation to reduce home energy bills.",
+      "eligibility": {
+        "propertyTypes": ["house", "flat"],
+        "epcRatings": ["D", "E", "F", "G"],
+        "councilTaxBands": {
+          "england": ["A", "B", "C", "D"],
+          "scotland": ["A", "B", "C", "D", "E"],
+          "wales": ["A", "B", "C", "D", "E"]
+        },
+        "benefits": [
+          "Universal Credit",
+          "Pension Guarantee Credit",
+          "Pension Savings Credit",
+          "Income Support",
+          "Income-based Jobseeker's Allowance (JSA)",
+          "Income-related Employment and Support Allowance (ESA)",
+          "Child Benefit",
+          "Housing Benefit"
+        ],
+        "regions": ["England", "Scotland", "Wales"],
+        "ownership": ["owner-occupier", "private-tenant", "social-tenant"],
+        "additionalCriteria": "Low-income or vulnerable households. Some households may need to contribute to costs."
+      },
+      "whatItCovers": [
+        "Loft insulation",
+        "Cavity wall insulation",
+        "Solid wall insulation",
+        "Room-in-roof insulation",
+        "Underfloor insulation"
+      ],
+      "savings": {
+        "typical": "Varies by measure",
+        "cavityWallInsulation": "£350 per year",
+        "loftInsulation": "£355 per year",
+        "solidWallInsulation": "£475 per year",
+        "description": "Savings depend on property type, insulation installed, and current heating system"
+      },
+      "applicationUrl": "https://www.gov.uk/apply-great-british-insulation-scheme",
+      "moreInfo": "https://www.ofgem.gov.uk/environmental-and-social-schemes/great-british-insulation-scheme",
+      "howToApply": "Check with your energy supplier directly. The online checker is closed but some suppliers still accept applications."
+    },
+    {
+      "id": "bus",
+      "name": "Boiler Upgrade Scheme",
+      "status": "Active until March 2028",
+      "description": "Grant to cover part of the cost of replacing fossil fuel heating systems with a heat pump or biomass boiler.",
+      "eligibility": {
+        "propertyTypes": ["house", "flat", "business-property"],
+        "epcRatings": ["Any - but must have valid EPC"],
+        "councilTaxBands": ["All"],
+        "benefits": ["Not means-tested - available to all property owners"],
+        "regions": ["England", "Wales"],
+        "ownership": ["owner-occupier", "landlord", "business-owner"],
+        "additionalCriteria": "Must own the property, be replacing fossil fuel heating (oil, gas, electric, LPG), and have a valid EPC. Installer must be MCS certified. Cannot be used for most new builds or social housing."
+      },
+      "whatItCovers": [
+        "Air source heat pump (£7,500 grant)",
+        "Ground source heat pump (£7,500 grant)",
+        "Water source heat pump (£7,500 grant)",
+        "Biomass boiler (£5,000 grant - rural/off-grid only)"
+      ],
+      "savings": {
+        "typical": "£300-600 per year",
+        "description": "Heat pumps are typically 300-400% efficient. Annual savings vary by property size, insulation, and previous heating system. Running costs typically £500-1200/year vs £1000-1800/year for gas boilers."
+      },
+      "applicationUrl": "https://www.gov.uk/apply-boiler-upgrade-scheme",
+      "moreInfo": "https://www.ofgem.gov.uk/environmental-and-social-schemes/boiler-upgrade-scheme-bus",
+      "howToApply": "Contact MCS certified installers (https://mcscertified.com/find-an-installer/) for quotes. Your installer applies on your behalf via Ofgem. Grant amount is deducted from installation cost."
+    },
+    {
+      "id": "eco4",
+      "name": "ECO4 (Energy Company Obligation)",
+      "status": "Active until March 2026",
+      "description": "Government scheme requiring energy suppliers to provide free or subsidised energy efficiency improvements to low-income and fuel-poor households.",
+      "eligibility": {
+        "propertyTypes": ["house", "flat"],
+        "epcRatings": {
+          "ownedHomes": ["D", "E", "F", "G"],
+          "privateRental": ["E", "F", "G"],
+          "socialHousing": ["E", "F", "G"]
+        },
+        "councilTaxBands": ["All"],
+        "benefits": [
+          "Universal Credit",
+          "Pension Guarantee Credit",
+          "Pension Savings Credit",
+          "Income Support",
+          "Income-based Jobseeker's Allowance (JSA)",
+          "Income-related Employment and Support Allowance (ESA)",
+          "Child Benefit",
+          "Housing Benefit"
+        ],
+        "regions": ["England", "Scotland", "Wales"],
+        "ownership": ["owner-occupier", "private-tenant", "social-tenant"],
+        "additionalCriteria": "Must claim qualifying benefits and live in private housing OR live in social housing with low EPC rating. LA Flex route: household income under £31,000 OR resident with health condition affected by cold home."
+      },
+      "whatItCovers": [
+        "Loft insulation",
+        "Cavity wall insulation",
+        "Solid wall insulation",
+        "Underfloor insulation",
+        "Boiler repair or replacement",
+        "Heating system upgrades",
+        "Heat pumps (whole-house retrofit approach)"
+      ],
+      "savings": {
+        "typical": "£200-500 per year",
+        "description": "Average household could save £300-400 annually. Whole-house retrofit packages can save significantly more. Exact savings depend on measures installed and property characteristics."
+      },
+      "applicationUrl": "https://www.gov.uk/energy-company-obligation",
+      "moreInfo": "https://www.ofgem.gov.uk/environmental-and-social-schemes/energy-company-obligation-eco",
+      "howToApply": "Contact your local council to check if they participate, or contact an energy supplier directly (list at https://www.ofgem.gov.uk/eco-supplier-contact-details). You can apply to any obligated supplier, not just your own."
+    },
+    {
+      "id": "hug",
+      "name": "Home Upgrade Grant",
+      "status": "Phase 2 closed to applications (local authority delivery ongoing)",
+      "description": "Provides energy efficiency upgrades and low carbon heating via local authority funding to low-income households in off-gas-grid homes.",
+      "eligibility": {
+        "propertyTypes": ["house", "flat"],
+        "epcRatings": ["D", "E", "F", "G"],
+        "councilTaxBands": ["All"],
+        "benefits": ["Low income households"],
+        "regions": ["England only"],
+        "ownership": ["owner-occupier", "private-tenant", "social-tenant"],
+        "additionalCriteria": "Must be low income, off the gas grid, and in an area where local authority has funding. Homeowners contribute nothing. Private landlords contribute minimum 1/3 of cost. Social landlords contribute minimum 1/2 of cost."
+      },
+      "whatItCovers": [
+        "Home insulation (various types)",
+        "Air source heat pumps",
+        "Ground source heat pumps",
+        "Solar thermal",
+        "Energy efficiency measures tailored to individual homes"
+      ],
+      "savings": {
+        "typical": "£500-1000+ per year",
+        "description": "Significant savings for off-grid homes switching from oil/LPG to heat pumps. Typical oil heating costs £1,500-2,000/year can be reduced to £800-1,200/year with a heat pump and insulation improvements."
+      },
+      "applicationUrl": "https://www.gov.uk/government/publications/home-upgrade-grant-phase-2",
+      "moreInfo": "https://www.gov.uk/government/publications/home-upgrade-grant-successful-local-authorities",
+      "howToApply": "Check if your local authority received funding (see link above). Contact them directly to apply. Phase 2 application window closed but delivery continues until March 2025."
+    },
+    {
+      "id": "solar-together",
+      "name": "Solar Together (now Switch Together)",
+      "status": "Active - rolling registrations",
+      "description": "Group-buying scheme for solar panels and battery storage, offering competitive pricing through bulk purchasing power.",
+      "eligibility": {
+        "propertyTypes": ["house", "bungalow"],
+        "epcRatings": ["All"],
+        "councilTaxBands": ["All"],
+        "benefits": ["Not means-tested - available to all homeowners"],
+        "regions": ["Available in participating local authority areas across England, Scotland, Wales"],
+        "ownership": ["owner-occupier"],
+        "additionalCriteria": "Must own your home and have suitable roof space with good solar exposure. Local authority must be participating in the scheme."
+      },
+      "whatItCovers": [
+        "Solar PV panels",
+        "Battery storage systems",
+        "EV chargers (optional add-on)",
+        "Professional installation by vetted installers",
+        "Full warranties and aftercare"
+      ],
+      "savings": {
+        "typical": "£400-900 per year",
+        "solarPanelsOnly": "£300-500 per year",
+        "solarPlusBattery": "£600-900 per year",
+        "description": "Typical 4kW solar system can generate 3,400kWh annually. Users report 60-80% of home energy from solar. With battery storage, can save more by using solar at night or storing cheap off-peak electricity. Payback period typically 7-12 years."
+      },
+      "applicationUrl": "https://switchtogether.co.uk/solar-and-battery",
+      "moreInfo": "https://switchtogether.co.uk",
+      "howToApply": "Register online (free, no obligation). Provide home details and energy use. Receive personalised offer with system size, costs, and savings estimate. Roof survey conducted if you proceed. Installation by certified installers."
+    }
+  ]
+};
 
         function App() {
-            const [formData, setFormData] = useState({
-                propertyType: '',
-                epcRating: '',
-                region: '',
-                onBenefits: ''
-            });
+            const [propertyType, setPropertyType] = useState('');
+            const [epcRating, setEpcRating] = useState('');
+            const [region, setRegion] = useState('');
+            const [onBenefits, setOnBenefits] = useState('');
+            const [results, setResults] = useState(null);
             const [showResults, setShowResults] = useState(false);
 
-            const handleChange = (e) => {
-                setFormData({
-                    ...formData,
-                    [e.target.name]: e.target.value
-                });
+            const checkEligibility = (grant, formData) => {
+                const { propertyType, epcRating, region, onBenefits } = formData;
+                
+                // Check property type
+                if (!grant.eligibility.propertyTypes.includes(propertyType) && 
+                    !grant.eligibility.propertyTypes.includes('business-property')) {
+                    return false;
+                }
+                
+                // Check region
+                if (grant.eligibility.regions) {
+                    if (Array.isArray(grant.eligibility.regions)) {
+                        const regionMatch = grant.eligibility.regions.some(r => 
+                            r.toLowerCase().includes(region.toLowerCase()) || 
+                            region.toLowerCase().includes(r.toLowerCase())
+                        );
+                        if (!regionMatch) return false;
+                    }
+                }
+                
+                // Check EPC rating
+                if (grant.eligibility.epcRatings) {
+                    if (Array.isArray(grant.eligibility.epcRatings)) {
+                        if (grant.eligibility.epcRatings[0] === "Any - but must have valid EPC") {
+                            // Boiler Upgrade Scheme accepts any rating
+                        } else if (grant.eligibility.epcRatings[0] === "All") {
+                            // Solar Together accepts all
+                        } else if (!grant.eligibility.epcRatings.includes(epcRating)) {
+                            return false;
+                        }
+                    }
+                }
+                
+                // For Solar Together, only accept house/bungalow
+                if (grant.id === 'solar-together' && propertyType !== 'house') {
+                    return false;
+                }
+                
+                // For Home Upgrade Grant, England only
+                if (grant.id === 'hug' && region !== 'England') {
+                    return false;
+                }
+                
+                // For Boiler Upgrade Scheme, England or Wales
+                if (grant.id === 'bus' && region === 'Scotland') {
+                    return false;
+                }
+                
+                return true;
             };
 
             const handleSubmit = (e) => {
                 e.preventDefault();
-                if (formData.propertyType && formData.epcRating && formData.region && formData.onBenefits) {
-                    setShowResults(true);
-                }
+                
+                const formData = { propertyType, epcRating, region, onBenefits };
+                const eligible = grantsData.grants.filter(grant => checkEligibility(grant, formData));
+                
+                setResults(eligible);
+                setShowResults(true);
             };
 
-            const checkEligibility = () => {
-                const grants = [];
-
-                // Great British Insulation Scheme
-                if (['D', 'E', 'F', 'G'].includes(formData.epcRating)) {
-                    grants.push({
-                        name: 'Great British Insulation Scheme (GBIS)',
-                        eligible: true,
-                        description: 'Free or subsidised insulation for homes with poor energy efficiency.',
-                        covers: 'Loft insulation, cavity wall insulation, solid wall insulation, underfloor insulation',
-                        savings: '£300-£400 per year on energy bills',
-                        howToApply: 'Contact an approved installer through the government website or energy suppliers like British Gas, E.ON, or Octopus Energy.',
-                        color: 'from-blue-500 to-blue-600'
-                    });
-                }
-
-                // Boiler Upgrade Scheme
-                if (['D', 'E', 'F', 'G'].includes(formData.epcRating) && 
-                    ['England', 'Wales'].includes(formData.region)) {
-                    grants.push({
-                        name: 'Boiler Upgrade Scheme (BUS)',
-                        eligible: true,
-                        description: 'Get £7,500 towards an air source heat pump or biomass boiler, or £5,000 towards a ground source heat pump.',
-                        covers: 'Air source heat pumps, ground source heat pumps, biomass boilers',
-                        savings: '£400-£900 per year on energy bills',
-                        howToApply: 'Find an MCS-certified installer who will apply on your behalf through the Ofgem portal.',
-                        color: 'from-green-500 to-green-600'
-                    });
-                }
-
-                // ECO4
-                if (formData.onBenefits === 'yes' || 
-                    ['E', 'F', 'G'].includes(formData.epcRating)) {
-                    grants.push({
-                        name: 'ECO4 (Energy Company Obligation)',
-                        eligible: true,
-                        description: 'Free home improvements for low-income and vulnerable households or homes with low energy ratings.',
-                        covers: 'Insulation, heating upgrades, solar panels, heat pumps, double glazing',
-                        savings: '£300-£600 per year on energy bills',
-                        howToApply: 'Contact energy suppliers like British Gas, E.ON, EDF, or Scottish Power. They assess eligibility and arrange installations.',
-                        color: 'from-purple-500 to-purple-600'
-                    });
-                }
-
-                // Home Upgrade Grant
-                if (formData.onBenefits === 'yes' && 
-                    ['E', 'F', 'G'].includes(formData.epcRating) && 
-                    formData.region === 'England' &&
-                    formData.propertyType === 'house') {
-                    grants.push({
-                        name: 'Home Upgrade Grant (HUG)',
-                        eligible: true,
-                        description: 'Up to £10,000 for energy efficiency improvements in off-gas grid homes.',
-                        covers: 'Insulation, low-carbon heating (heat pumps), renewable energy, energy storage',
-                        savings: '£500-£1,000 per year on energy bills',
-                        howToApply: 'Apply through your local authority. Check your council website for eligibility and application process.',
-                        color: 'from-orange-500 to-orange-600'
-                    });
-                }
-
-                // Solar Together
-                if (['England', 'Wales', 'Scotland'].includes(formData.region)) {
-                    grants.push({
-                        name: 'Solar Together',
-                        eligible: true,
-                        description: 'Group-buying scheme offering discounted solar panels and battery storage through local councils.',
-                        covers: 'Solar PV panels, battery storage systems',
-                        savings: '£400-£900 per year on energy bills',
-                        howToApply: 'Register through your local council when they run the scheme (usually annually). No upfront cost required.',
-                        color: 'from-yellow-500 to-yellow-600'
-                    });
-                }
-
-                return grants;
+            const resetForm = () => {
+                setPropertyType('');
+                setEpcRating('');
+                setRegion('');
+                setOnBenefits('');
+                setResults(null);
+                setShowResults(false);
             };
-
-            const eligibleGrants = showResults ? checkEligibility() : [];
 
             return (
-                <div className="min-h-screen">
+                <div className="min-h-screen bg-gray-50">
                     {/* Hero Section */}
                     <div className="hero-gradient text-white py-20 px-4">
                         <div className="max-w-4xl mx-auto text-center">
-                            <h1 className="text-5xl font-bold mb-4">UK Energy Grants Checker</h1>
-                            <p className="text-xl opacity-90">Find out which energy grants you're eligible for and start saving on your energy bills today</p>
+                            <h1 className="text-5xl md:text-6xl font-bold mb-6">
+                                UK Energy Grants Checker
+                            </h1>
+                            <p className="text-xl md:text-2xl mb-4 text-white/90">
+                                Find out which energy efficiency grants you're eligible for
+                            </p>
+                            <p className="text-lg text-white/80 max-w-2xl mx-auto">
+                                Save money on your energy bills with government-backed grants for insulation, heat pumps, and solar panels
+                            </p>
                         </div>
                     </div>
 
-                    {/* Form Section */}
-                    <div className="max-w-3xl mx-auto px-4 -mt-10">
-                        <div className="bg-white rounded-lg shadow-xl p-8 mb-8">
-                            <h2 className="text-2xl font-bold text-gray-800 mb-6">Check Your Eligibility</h2>
-                            <form onSubmit={handleSubmit} className="space-y-6">
-                                {/* Property Type */}
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Property Type
-                                    </label>
-                                    <select
-                                        name="propertyType"
-                                        value={formData.propertyType}
-                                        onChange={handleChange}
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                                        required
-                                    >
-                                        <option value="">Select property type</option>
-                                        <option value="house">House</option>
-                                        <option value="flat">Flat</option>
-                                    </select>
-                                </div>
-
-                                {/* EPC Rating */}
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        EPC Rating
-                                    </label>
-                                    <select
-                                        name="epcRating"
-                                        value={formData.epcRating}
-                                        onChange={handleChange}
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                                        required
-                                    >
-                                        <option value="">Select EPC rating</option>
-                                        <option value="A">A (Most efficient)</option>
-                                        <option value="B">B</option>
-                                        <option value="C">C</option>
-                                        <option value="D">D</option>
-                                        <option value="E">E</option>
-                                        <option value="F">F</option>
-                                        <option value="G">G (Least efficient)</option>
-                                    </select>
-                                </div>
-
-                                {/* Region */}
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        UK Region
-                                    </label>
-                                    <select
-                                        name="region"
-                                        value={formData.region}
-                                        onChange={handleChange}
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                                        required
-                                    >
-                                        <option value="">Select region</option>
-                                        <option value="England">England</option>
-                                        <option value="Scotland">Scotland</option>
-                                        <option value="Wales">Wales</option>
-                                        <option value="Northern Ireland">Northern Ireland</option>
-                                    </select>
-                                </div>
-
-                                {/* On Benefits */}
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Do you receive any benefits?
-                                    </label>
-                                    <select
-                                        name="onBenefits"
-                                        value={formData.onBenefits}
-                                        onChange={handleChange}
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                                        required
-                                    >
-                                        <option value="">Select option</option>
-                                        <option value="yes">Yes</option>
-                                        <option value="no">No</option>
-                                    </select>
-                                    <p className="mt-2 text-sm text-gray-500">
-                                        Including Universal Credit, Pension Credit, Income Support, ESA, JSA, Child Benefit, or Tax Credits
-                                    </p>
-                                </div>
-
-                                <button
-                                    type="submit"
-                                    className="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold py-3 px-6 rounded-lg hover:from-purple-700 hover:to-blue-700 transition duration-200 transform hover:scale-105"
-                                >
-                                    Check Eligibility
-                                </button>
-                            </form>
-                        </div>
-
-                        {/* Results Section */}
-                        {showResults && (
-                            <div className="mb-12">
-                                <h2 className="text-3xl font-bold text-gray-800 mb-6">Your Eligible Grants</h2>
-                                {eligibleGrants.length > 0 ? (
-                                    <div className="space-y-6">
-                                        {eligibleGrants.map((grant, index) => (
-                                            <div key={index} className="grant-card bg-white rounded-lg shadow-lg overflow-hidden">
-                                                <div className={`bg-gradient-to-r ${grant.color} text-white p-6`}>
-                                                    <h3 className="text-2xl font-bold mb-2">{grant.name}</h3>
-                                                    <p className="text-lg opacity-90">{grant.description}</p>
-                                                </div>
-                                                <div className="p-6">
-                                                    <div className="mb-4">
-                                                        <h4 className="font-semibold text-gray-800 mb-2">What it covers:</h4>
-                                                        <p className="text-gray-600">{grant.covers}</p>
-                                                    </div>
-                                                    <div className="mb-4">
-                                                        <h4 className="font-semibold text-gray-800 mb-2">Typical savings:</h4>
-                                                        <p className="text-gray-600">{grant.savings}</p>
-                                                    </div>
-                                                    <div className="mb-4">
-                                                        <h4 className="font-semibold text-gray-800 mb-2">How to apply:</h4>
-                                                        <p className="text-gray-600">{grant.howToApply}</p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        ))}
+                    {/* Main Content */}
+                    <div className="max-w-4xl mx-auto px-4 py-12">
+                        {!showResults ? (
+                            <div className="bg-white rounded-2xl shadow-xl p-8 md:p-12">
+                                <h2 className="text-3xl font-bold text-gray-800 mb-8 text-center">
+                                    Check Your Eligibility
+                                </h2>
+                                
+                                <form onSubmit={handleSubmit} className="space-y-6">
+                                    <div>
+                                        <label className="block text-lg font-semibold text-gray-700 mb-2">
+                                            Property Type
+                                        </label>
+                                        <select
+                                            value={propertyType}
+                                            onChange={(e) => setPropertyType(e.target.value)}
+                                            required
+                                            className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-700"
+                                        >
+                                            <option value="">Select property type</option>
+                                            <option value="house">House</option>
+                                            <option value="flat">Flat</option>
+                                        </select>
                                     </div>
-                                ) : (
-                                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center">
-                                        <p className="text-gray-700 text-lg">
-                                            Based on your information, you don't currently qualify for these specific grants. 
-                                            However, contact your energy supplier to discuss other available schemes and support.
+
+                                    <div>
+                                        <label className="block text-lg font-semibold text-gray-700 mb-2">
+                                            EPC Rating
+                                        </label>
+                                        <select
+                                            value={epcRating}
+                                            onChange={(e) => setEpcRating(e.target.value)}
+                                            required
+                                            className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-700"
+                                        >
+                                            <option value="">Select EPC rating</option>
+                                            <option value="A">A</option>
+                                            <option value="B">B</option>
+                                            <option value="C">C</option>
+                                            <option value="D">D</option>
+                                            <option value="E">E</option>
+                                            <option value="F">F</option>
+                                            <option value="G">G</option>
+                                        </select>
+                                        <p className="mt-2 text-sm text-gray-600">
+                                            <a href="https://www.gov.uk/find-energy-certificate" target="_blank" rel="noopener noreferrer" className="text-purple-600 hover:underline">
+                                                Find your EPC rating →
+                                            </a>
                                         </p>
                                     </div>
+
+                                    <div>
+                                        <label className="block text-lg font-semibold text-gray-700 mb-2">
+                                            UK Region
+                                        </label>
+                                        <select
+                                            value={region}
+                                            onChange={(e) => setRegion(e.target.value)}
+                                            required
+                                            className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-700"
+                                        >
+                                            <option value="">Select region</option>
+                                            <option value="England">England</option>
+                                            <option value="Scotland">Scotland</option>
+                                            <option value="Wales">Wales</option>
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-lg font-semibold text-gray-700 mb-2">
+                                            Do you receive any benefits?
+                                        </label>
+                                        <select
+                                            value={onBenefits}
+                                            onChange={(e) => setOnBenefits(e.target.value)}
+                                            required
+                                            className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-700"
+                                        >
+                                            <option value="">Select option</option>
+                                            <option value="yes">Yes</option>
+                                            <option value="no">No</option>
+                                        </select>
+                                        <p className="mt-2 text-sm text-gray-600">
+                                            Including Universal Credit, Pension Credit, Child Benefit, Housing Benefit, etc.
+                                        </p>
+                                    </div>
+
+                                    <button
+                                        type="submit"
+                                        className="w-full bg-gradient-to-r from-purple-600 to-blue-500 text-white font-bold py-4 px-8 rounded-lg hover:from-purple-700 hover:to-blue-600 transform transition hover:scale-[1.02] text-lg"
+                                    >
+                                        Check My Eligibility
+                                    </button>
+                                </form>
+                            </div>
+                        ) : (
+                            <div>
+                                <div className="mb-8 text-center">
+                                    <button
+                                        onClick={resetForm}
+                                        className="inline-flex items-center text-purple-600 hover:text-purple-700 font-semibold text-lg"
+                                    >
+                                        ← Check Again
+                                    </button>
+                                </div>
+
+                                {results.length === 0 ? (
+                                    <div className="bg-white rounded-2xl shadow-xl p-12 text-center">
+                                        <div className="text-6xl mb-4">😔</div>
+                                        <h2 className="text-2xl font-bold text-gray-800 mb-4">
+                                            No Grants Found
+                                        </h2>
+                                        <p className="text-gray-600 mb-6">
+                                            Based on the information provided, we couldn't find any grants you're currently eligible for.
+                                        </p>
+                                        <p className="text-gray-600">
+                                            Eligibility criteria change regularly. Check again later or contact your local council for more information.
+                                        </p>
+                                    </div>
+                                ) : (
+                                    <div>
+                                        <div className="bg-green-50 border-2 border-green-200 rounded-2xl p-6 mb-8 text-center">
+                                            <div className="text-4xl mb-2">🎉</div>
+                                            <h2 className="text-2xl font-bold text-gray-800 mb-2">
+                                                You're Eligible for {results.length} Grant{results.length !== 1 ? 's' : ''}!
+                                            </h2>
+                                            <p className="text-gray-700">
+                                                Here's what you could save on your energy bills
+                                            </p>
+                                        </div>
+
+                                        <div className="space-y-6">
+                                            {results.map((grant, index) => (
+                                                <div key={grant.id} className="bg-white rounded-2xl shadow-xl p-8 card-hover">
+                                                    <div className="flex items-start justify-between mb-4">
+                                                        <div>
+                                                            <h3 className="text-2xl font-bold text-gray-800 mb-2">
+                                                                {grant.name}
+                                                            </h3>
+                                                            <span className={`inline-block px-4 py-1 rounded-full text-sm font-semibold ${
+                                                                grant.status.includes('Active') 
+                                                                    ? 'bg-green-100 text-green-800' 
+                                                                    : grant.status.includes('closed')
+                                                                    ? 'bg-yellow-100 text-yellow-800'
+                                                                    : 'bg-blue-100 text-blue-800'
+                                                            }`}>
+                                                                {grant.status}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+
+                                                    <p className="text-gray-700 mb-6 text-lg">
+                                                        {grant.description}
+                                                    </p>
+
+                                                    <div className="grid md:grid-cols-2 gap-6 mb-6">
+                                                        <div className="bg-purple-50 rounded-xl p-5">
+                                                            <h4 className="font-bold text-gray-800 mb-3 flex items-center">
+                                                                <span className="text-2xl mr-2">💷</span>
+                                                                Typical Savings
+                                                            </h4>
+                                                            <p className="text-2xl font-bold text-purple-600 mb-2">
+                                                                {grant.savings.typical}
+                                                            </p>
+                                                            <p className="text-sm text-gray-600">
+                                                                {grant.savings.description}
+                                                            </p>
+                                                        </div>
+
+                                                        <div className="bg-blue-50 rounded-xl p-5">
+                                                            <h4 className="font-bold text-gray-800 mb-3 flex items-center">
+                                                                <span className="text-2xl mr-2">🔧</span>
+                                                                What It Covers
+                                                            </h4>
+                                                            <ul className="space-y-1">
+                                                                {grant.whatItCovers.slice(0, 4).map((item, i) => (
+                                                                    <li key={i} className="text-gray-700 flex items-start">
+                                                                        <span className="text-blue-500 mr-2">✓</span>
+                                                                        <span className="text-sm">{item}</span>
+                                                                    </li>
+                                                                ))}
+                                                            </ul>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="bg-gray-50 rounded-xl p-5 mb-6">
+                                                        <h4 className="font-bold text-gray-800 mb-3">
+                                                            How to Apply
+                                                        </h4>
+                                                        <p className="text-gray-700 mb-4">
+                                                            {grant.howToApply}
+                                                        </p>
+                                                    </div>
+
+                                                    <div className="flex flex-col sm:flex-row gap-3">
+                                                        <a
+                                                            href={grant.applicationUrl}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="flex-1 bg-gradient-to-r from-purple-600 to-blue-500 text-white font-bold py-3 px-6 rounded-lg hover:from-purple-700 hover:to-blue-600 text-center transition"
+                                                        >
+                                                            Apply Now →
+                                                        </a>
+                                                        <a
+                                                            href={grant.moreInfo}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="flex-1 bg-gray-200 text-gray-700 font-bold py-3 px-6 rounded-lg hover:bg-gray-300 text-center transition"
+                                                        >
+                                                            Learn More
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
                                 )}
-                                
-                                <button
-                                    onClick={() => setShowResults(false)}
-                                    className="mt-6 w-full bg-gray-200 text-gray-700 font-semibold py-3 px-6 rounded-lg hover:bg-gray-300 transition duration-200"
-                                >
-                                    Check Again
-                                </button>
                             </div>
                         )}
-                    </div>
 
-                    {/* Footer */}
-                    <footer className="bg-gray-800 text-white py-8 mt-12">
-                        <div className="max-w-4xl mx-auto px-4 text-center">
-                            <p className="mb-2">Information is for guidance only. Always verify eligibility with official sources.</p>
-                            <p className="text-sm opacity-75">Last updated: 2024 | Data based on publicly available UK government schemes</p>
+                        {/* Footer */}
+                        <div className="mt-12 text-center text-gray-600">
+                            <p className="mb-2">
+                                Data last updated: March 2026
+                            </p>
+                            <p className="text-sm">
+                                Always verify eligibility criteria and grant amounts on official government websites. 
+                                Savings are estimates and may vary.
+                            </p>
                         </div>
-                    </footer>
+                    </div>
                 </div>
             );
         }
