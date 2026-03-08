@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UK Energy Grants Checker - Find Your Eligibility</title>
+    <meta name="description" content="Check which UK energy grants you're eligible for and save money on home improvements">
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .hero-gradient {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+        }
+        .grant-card {
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .grant-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState } = React;
+
+        function App() {
+            const [formData, setFormData] = useState({
+                propertyType: '',
+                epcRating: '',
+                region: '',
+                onBenefits: ''
+            });
+            const [showResults, setShowResults] = useState(false);
+
+            const handleChange = (e) => {
+                setFormData({
+                    ...formData,
+                    [e.target.name]: e.target.value
+                });
+            };
+
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                if (formData.propertyType && formData.epcRating && formData.region && formData.onBenefits) {
+                    setShowResults(true);
+                }
+            };
+
+            const checkEligibility = () => {
+                const grants = [];
+
+                // Great British Insulation Scheme
+                if (['D', 'E', 'F', 'G'].includes(formData.epcRating)) {
+                    grants.push({
+                        name: 'Great British Insulation Scheme (GBIS)',
+                        eligible: true,
+                        description: 'Free or subsidised insulation for homes with poor energy efficiency.',
+                        covers: 'Loft insulation, cavity wall insulation, solid wall insulation, underfloor insulation',
+                        savings: '£300-£400 per year on energy bills',
+                        howToApply: 'Contact an approved installer through the government website or energy suppliers like British Gas, E.ON, or Octopus Energy.',
+                        color: 'from-blue-500 to-blue-600'
+                    });
+                }
+
+                // Boiler Upgrade Scheme
+                if (['D', 'E', 'F', 'G'].includes(formData.epcRating) && 
+                    ['England', 'Wales'].includes(formData.region)) {
+                    grants.push({
+                        name: 'Boiler Upgrade Scheme (BUS)',
+                        eligible: true,
+                        description: 'Get £7,500 towards an air source heat pump or biomass boiler, or £5,000 towards a ground source heat pump.',
+                        covers: 'Air source heat pumps, ground source heat pumps, biomass boilers',
+                        savings: '£400-£900 per year on energy bills',
+                        howToApply: 'Find an MCS-certified installer who will apply on your behalf through the Ofgem portal.',
+                        color: 'from-green-500 to-green-600'
+                    });
+                }
+
+                // ECO4
+                if (formData.onBenefits === 'yes' || 
+                    ['E', 'F', 'G'].includes(formData.epcRating)) {
+                    grants.push({
+                        name: 'ECO4 (Energy Company Obligation)',
+                        eligible: true,
+                        description: 'Free home improvements for low-income and vulnerable households or homes with low energy ratings.',
+                        covers: 'Insulation, heating upgrades, solar panels, heat pumps, double glazing',
+                        savings: '£300-£600 per year on energy bills',
+                        howToApply: 'Contact energy suppliers like British Gas, E.ON, EDF, or Scottish Power. They assess eligibility and arrange installations.',
+                        color: 'from-purple-500 to-purple-600'
+                    });
+                }
+
+                // Home Upgrade Grant
+                if (formData.onBenefits === 'yes' && 
+                    ['E', 'F', 'G'].includes(formData.epcRating) && 
+                    formData.region === 'England' &&
+                    formData.propertyType === 'house') {
+                    grants.push({
+                        name: 'Home Upgrade Grant (HUG)',
+                        eligible: true,
+                        description: 'Up to £10,000 for energy efficiency improvements in off-gas grid homes.',
+                        covers: 'Insulation, low-carbon heating (heat pumps), renewable energy, energy storage',
+                        savings: '£500-£1,000 per year on energy bills',
+                        howToApply: 'Apply through your local authority. Check your council website for eligibility and application process.',
+                        color: 'from-orange-500 to-orange-600'
+                    });
+                }
+
+                // Solar Together
+                if (['England', 'Wales', 'Scotland'].includes(formData.region)) {
+                    grants.push({
+                        name: 'Solar Together',
+                        eligible: true,
+                        description: 'Group-buying scheme offering discounted solar panels and battery storage through local councils.',
+                        covers: 'Solar PV panels, battery storage systems',
+                        savings: '£400-£900 per year on energy bills',
+                        howToApply: 'Register through your local council when they run the scheme (usually annually). No upfront cost required.',
+                        color: 'from-yellow-500 to-yellow-600'
+                    });
+                }
+
+                return grants;
+            };
+
+            const eligibleGrants = showResults ? checkEligibility() : [];
+
+            return (
+                <div className="min-h-screen">
+                    {/* Hero Section */}
+                    <div className="hero-gradient text-white py-20 px-4">
+                        <div className="max-w-4xl mx-auto text-center">
+                            <h1 className="text-5xl font-bold mb-4">UK Energy Grants Checker</h1>
+                            <p className="text-xl opacity-90">Find out which energy grants you're eligible for and start saving on your energy bills today</p>
+                        </div>
+                    </div>
+
+                    {/* Form Section */}
+                    <div className="max-w-3xl mx-auto px-4 -mt-10">
+                        <div className="bg-white rounded-lg shadow-xl p-8 mb-8">
+                            <h2 className="text-2xl font-bold text-gray-800 mb-6">Check Your Eligibility</h2>
+                            <form onSubmit={handleSubmit} className="space-y-6">
+                                {/* Property Type */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Property Type
+                                    </label>
+                                    <select
+                                        name="propertyType"
+                                        value={formData.propertyType}
+                                        onChange={handleChange}
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                        required
+                                    >
+                                        <option value="">Select property type</option>
+                                        <option value="house">House</option>
+                                        <option value="flat">Flat</option>
+                                    </select>
+                                </div>
+
+                                {/* EPC Rating */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        EPC Rating
+                                    </label>
+                                    <select
+                                        name="epcRating"
+                                        value={formData.epcRating}
+                                        onChange={handleChange}
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                        required
+                                    >
+                                        <option value="">Select EPC rating</option>
+                                        <option value="A">A (Most efficient)</option>
+                                        <option value="B">B</option>
+                                        <option value="C">C</option>
+                                        <option value="D">D</option>
+                                        <option value="E">E</option>
+                                        <option value="F">F</option>
+                                        <option value="G">G (Least efficient)</option>
+                                    </select>
+                                </div>
+
+                                {/* Region */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        UK Region
+                                    </label>
+                                    <select
+                                        name="region"
+                                        value={formData.region}
+                                        onChange={handleChange}
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                        required
+                                    >
+                                        <option value="">Select region</option>
+                                        <option value="England">England</option>
+                                        <option value="Scotland">Scotland</option>
+                                        <option value="Wales">Wales</option>
+                                        <option value="Northern Ireland">Northern Ireland</option>
+                                    </select>
+                                </div>
+
+                                {/* On Benefits */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Do you receive any benefits?
+                                    </label>
+                                    <select
+                                        name="onBenefits"
+                                        value={formData.onBenefits}
+                                        onChange={handleChange}
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                        required
+                                    >
+                                        <option value="">Select option</option>
+                                        <option value="yes">Yes</option>
+                                        <option value="no">No</option>
+                                    </select>
+                                    <p className="mt-2 text-sm text-gray-500">
+                                        Including Universal Credit, Pension Credit, Income Support, ESA, JSA, Child Benefit, or Tax Credits
+                                    </p>
+                                </div>
+
+                                <button
+                                    type="submit"
+                                    className="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold py-3 px-6 rounded-lg hover:from-purple-700 hover:to-blue-700 transition duration-200 transform hover:scale-105"
+                                >
+                                    Check Eligibility
+                                </button>
+                            </form>
+                        </div>
+
+                        {/* Results Section */}
+                        {showResults && (
+                            <div className="mb-12">
+                                <h2 className="text-3xl font-bold text-gray-800 mb-6">Your Eligible Grants</h2>
+                                {eligibleGrants.length > 0 ? (
+                                    <div className="space-y-6">
+                                        {eligibleGrants.map((grant, index) => (
+                                            <div key={index} className="grant-card bg-white rounded-lg shadow-lg overflow-hidden">
+                                                <div className={`bg-gradient-to-r ${grant.color} text-white p-6`}>
+                                                    <h3 className="text-2xl font-bold mb-2">{grant.name}</h3>
+                                                    <p className="text-lg opacity-90">{grant.description}</p>
+                                                </div>
+                                                <div className="p-6">
+                                                    <div className="mb-4">
+                                                        <h4 className="font-semibold text-gray-800 mb-2">What it covers:</h4>
+                                                        <p className="text-gray-600">{grant.covers}</p>
+                                                    </div>
+                                                    <div className="mb-4">
+                                                        <h4 className="font-semibold text-gray-800 mb-2">Typical savings:</h4>
+                                                        <p className="text-gray-600">{grant.savings}</p>
+                                                    </div>
+                                                    <div className="mb-4">
+                                                        <h4 className="font-semibold text-gray-800 mb-2">How to apply:</h4>
+                                                        <p className="text-gray-600">{grant.howToApply}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center">
+                                        <p className="text-gray-700 text-lg">
+                                            Based on your information, you don't currently qualify for these specific grants. 
+                                            However, contact your energy supplier to discuss other available schemes and support.
+                                        </p>
+                                    </div>
+                                )}
+                                
+                                <button
+                                    onClick={() => setShowResults(false)}
+                                    className="mt-6 w-full bg-gray-200 text-gray-700 font-semibold py-3 px-6 rounded-lg hover:bg-gray-300 transition duration-200"
+                                >
+                                    Check Again
+                                </button>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Footer */}
+                    <footer className="bg-gray-800 text-white py-8 mt-12">
+                        <div className="max-w-4xl mx-auto px-4 text-center">
+                            <p className="mb-2">Information is for guidance only. Always verify eligibility with official sources.</p>
+                            <p className="text-sm opacity-75">Last updated: 2024 | Data based on publicly available UK government schemes</p>
+                        </div>
+                    </footer>
+                </div>
+            );
+        }
+
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html>
